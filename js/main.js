@@ -182,15 +182,13 @@
 
     if (!validateForm()) return;
 
-    // Cloudflare Turnstile must be solved before we submit.
+    // Cloudflare Turnstile token, if the widget produced one. We deliberately do
+    // NOT hard-block on its absence: formbridge verifies the token server-side when
+    // captcha is enabled for this form, so a misconfigured/errored widget can never
+    // lock a real visitor out of the form. Same pattern as the Expo Hotels form.
     var captchaToken = (window.turnstile && typeof turnstile.getResponse === 'function')
       ? turnstile.getResponse()
       : (form.querySelector('[name="cf-turnstile-response"]') || {}).value || '';
-    if (!captchaToken) {
-      formStatus.className = 'form-status error';
-      formStatus.textContent = 'Bevestig nog even dat u geen robot bent.';
-      return;
-    }
 
     var submitBtn = form.querySelector('[type="submit"]');
     submitBtn.disabled = true;
