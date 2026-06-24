@@ -182,6 +182,16 @@
 
     if (!validateForm()) return;
 
+    // Cloudflare Turnstile must be solved before we submit.
+    var captchaToken = (window.turnstile && typeof turnstile.getResponse === 'function')
+      ? turnstile.getResponse()
+      : (form.querySelector('[name="cf-turnstile-response"]') || {}).value || '';
+    if (!captchaToken) {
+      formStatus.className = 'form-status error';
+      formStatus.textContent = 'Bevestig nog even dat u geen robot bent.';
+      return;
+    }
+
     var submitBtn = form.querySelector('[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Versturen...';
@@ -192,7 +202,8 @@
       email: form.querySelector('[name="email"]').value.trim(),
       bericht: form.querySelector('[name="bericht"]').value.trim(),
       _gotcha: form.querySelector('[name="website"]').value,
-      _ts: form.dataset.ts || ''
+      _ts: form.dataset.ts || '',
+      'cf-turnstile-response': captchaToken
     };
 
     // Formbridge public submission endpoint
@@ -224,6 +235,8 @@
       .finally(function () {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Verstuur aanvraag';
+        // Turnstile tokens are single-use; reset so a retry gets a fresh one.
+        if (window.turnstile && typeof turnstile.reset === 'function') turnstile.reset();
       });
   });
 
