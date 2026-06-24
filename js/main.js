@@ -182,14 +182,6 @@
 
     if (!validateForm()) return;
 
-    // Cloudflare Turnstile token, if the widget produced one. We deliberately do
-    // NOT hard-block on its absence: formbridge verifies the token server-side when
-    // captcha is enabled for this form, so a misconfigured/errored widget can never
-    // lock a real visitor out of the form. Same pattern as the Expo Hotels form.
-    var captchaToken = (window.turnstile && typeof turnstile.getResponse === 'function')
-      ? turnstile.getResponse()
-      : (form.querySelector('[name="cf-turnstile-response"]') || {}).value || '';
-
     var submitBtn = form.querySelector('[type="submit"]');
     submitBtn.disabled = true;
     submitBtn.textContent = 'Versturen...';
@@ -200,8 +192,7 @@
       email: form.querySelector('[name="email"]').value.trim(),
       bericht: form.querySelector('[name="bericht"]').value.trim(),
       _gotcha: form.querySelector('[name="website"]').value,
-      _ts: form.dataset.ts || '',
-      'cf-turnstile-response': captchaToken
+      _ts: form.dataset.ts || ''
     };
 
     // Formbridge public submission endpoint
@@ -233,8 +224,6 @@
       .finally(function () {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Verstuur aanvraag';
-        // Turnstile tokens are single-use; reset so a retry gets a fresh one.
-        if (window.turnstile && typeof turnstile.reset === 'function') turnstile.reset();
       });
   });
 
