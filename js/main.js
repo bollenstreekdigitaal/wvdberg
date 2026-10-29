@@ -192,7 +192,9 @@
       email: form.querySelector('[name="email"]').value.trim(),
       bericht: form.querySelector('[name="bericht"]').value.trim(),
       _gotcha: form.querySelector('[name="website"]').value,
-      _ts: form.dataset.ts || ''
+      _ts: form.dataset.ts || '',
+      // Turnstile injects this hidden input once the visitor passes the check
+      'cf-turnstile-response': (form.querySelector('[name="cf-turnstile-response"]') || {}).value || ''
     };
 
     // Formbridge public submission endpoint
@@ -222,6 +224,8 @@
         formStatus.textContent = 'Er is iets misgegaan. Probeer het later opnieuw of bel direct.';
       })
       .finally(function () {
+        // Captcha tokens are single-use; get a fresh one for the next submission
+        if (window.turnstile) window.turnstile.reset();
         submitBtn.disabled = false;
         submitBtn.textContent = 'Verstuur aanvraag';
       });
